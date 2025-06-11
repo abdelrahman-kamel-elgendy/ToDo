@@ -8,6 +8,44 @@ const { registerSchema, loginSchema, changePasswordSchema } = require('../valida
 const { protect } = require('../middleware/auth');
 const { AppError } = require('../utils/errors');
 
+/**
+ * @swagger
+ * tags:
+ *   name: Auth
+ *   description: Authentication and user management
+ */
+
+/**
+ * @swagger
+ * /api/auth/register:
+ *   post:
+ *     summary: Register a new user
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *               - name
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               password:
+ *                 type: string
+ *                 format: password
+ *               name:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: User registered
+ *       400:
+ *         description: Email already registered or validation error
+ */
 // Register a new user
 router.post('/register', validateRequest(registerSchema), async (req, res, next) => {
   try {
@@ -59,6 +97,34 @@ router.post('/register', validateRequest(registerSchema), async (req, res, next)
   }
 });
 
+/**
+ * @swagger
+ * /api/auth/login:
+ *   post:
+ *     summary: Login user
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               password:
+ *                 type: string
+ *                 format: password
+ *     responses:
+ *       200:
+ *         description: User logged in
+ *       401:
+ *         description: Invalid email or password
+ */
 // Login user
 router.post('/login', validateRequest(loginSchema), async (req, res, next) => {
   try {
@@ -104,6 +170,36 @@ router.post('/login', validateRequest(loginSchema), async (req, res, next) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/auth/change-password:
+ *   post:
+ *     summary: Change password
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - currentPassword
+ *               - newPassword
+ *             properties:
+ *               currentPassword:
+ *                 type: string
+ *                 format: password
+ *               newPassword:
+ *                 type: string
+ *                 format: password
+ *     responses:
+ *       200:
+ *         description: Password updated successfully
+ *       401:
+ *         description: Current password is incorrect or unauthorized
+ */
 // Change password
 router.post('/change-password', protect, validateRequest(changePasswordSchema), async (req, res, next) => {
   try {
@@ -140,6 +236,20 @@ router.post('/change-password', protect, validateRequest(changePasswordSchema), 
   }
 });
 
+/**
+ * @swagger
+ * /api/auth/me:
+ *   get:
+ *     summary: Get current user
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Current user info
+ *       401:
+ *         description: Unauthorized
+ */
 // Get current user
 router.get('/me', protect, async (req, res) => {
   res.json({

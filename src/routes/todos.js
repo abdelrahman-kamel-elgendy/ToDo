@@ -11,6 +11,46 @@ const {
   listTodosSchema
 } = require('../validations/todo');
 
+/**
+ * @swagger
+ * tags:
+ *   name: Todos
+ *   description: Todo management
+ */
+
+/**
+ * @swagger
+ * /api/todos:
+ *   post:
+ *     summary: Create a new todo
+ *     tags: [Todos]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               dueDate:
+ *                 type: string
+ *                 format: date-time
+ *               priority:
+ *                 type: string
+ *                 enum: [low, medium, high]
+ *     responses:
+ *       201:
+ *         description: Todo created
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ */
 // Create a new todo
 router.post('/', protect, validateRequest(createTodoSchema), async (req, res, next) => {
   try {
@@ -36,6 +76,47 @@ router.post('/', protect, validateRequest(createTodoSchema), async (req, res, ne
   }
 });
 
+/**
+ * @swagger
+ * /api/todos:
+ *   get:
+ *     summary: Get all todos for the current user
+ *     tags: [Todos]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: Number of items per page
+ *       - in: query
+ *         name: completed
+ *         schema:
+ *           type: boolean
+ *         description: Filter by completion status
+ *       - in: query
+ *         name: priority
+ *         schema:
+ *           type: string
+ *           enum: [low, medium, high]
+ *         description: Filter by priority
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search by title or description
+ *     responses:
+ *       200:
+ *         description: List of todos
+ *       401:
+ *         description: Unauthorized
+ */
 // Get all todos for the current user
 router.get('/', protect, validateRequest(listTodosSchema), async (req, res, next) => {
   try {
@@ -81,6 +162,29 @@ router.get('/', protect, validateRequest(listTodosSchema), async (req, res, next
   }
 });
 
+/**
+ * @swagger
+ * /api/todos/{id}:
+ *   get:
+ *     summary: Get a single todo
+ *     tags: [Todos]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The todo ID
+ *     responses:
+ *       200:
+ *         description: The todo item
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Todo not found
+ */
 // Get a single todo
 router.get('/:id', protect, validateRequest(getTodoSchema), async (req, res, next) => {
   try {
@@ -107,6 +211,48 @@ router.get('/:id', protect, validateRequest(getTodoSchema), async (req, res, nex
   }
 });
 
+/**
+ * @swagger
+ * /api/todos/{id}:
+ *   patch:
+ *     summary: Update a todo
+ *     tags: [Todos]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The todo ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               dueDate:
+ *                 type: string
+ *                 format: date-time
+ *               priority:
+ *                 type: string
+ *                 enum: [low, medium, high]
+ *               completed:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Todo updated
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Todo not found
+ */
 // Update a todo
 router.patch('/:id', protect, validateRequest(updateTodoSchema), async (req, res, next) => {
   try {
@@ -145,6 +291,29 @@ router.patch('/:id', protect, validateRequest(updateTodoSchema), async (req, res
   }
 });
 
+/**
+ * @swagger
+ * /api/todos/{id}:
+ *   delete:
+ *     summary: Delete a todo
+ *     tags: [Todos]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The todo ID
+ *     responses:
+ *       200:
+ *         description: Todo deleted
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Todo not found
+ */
 // Delete a todo
 router.delete('/:id', protect, validateRequest(getTodoSchema), async (req, res, next) => {
   try {
