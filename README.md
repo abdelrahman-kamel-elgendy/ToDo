@@ -6,12 +6,14 @@ A RESTful API for a Todo List application built with Node.js, Express, Prisma, a
 
 - 🔐 User authentication (register, login, logout)
 - ✅ Create, read, update, and delete todos
-- 🎯 Priority levels for todos
+- 🎯 Priority levels for todos (LOW, MEDIUM, HIGH)
 - 📅 Due date support
 - 📊 Pagination and filtering
 - 🛡️ Input validation with Zod
 - 🐳 Docker support for database
 - 🧪 Comprehensive test suite
+- 🔒 JWT-based authentication
+- 🎨 Clean architecture with repository pattern
 
 ## Tech Stack
 
@@ -21,12 +23,14 @@ A RESTful API for a Todo List application built with Node.js, Express, Prisma, a
 - Zod for validation
 - JWT for authentication
 - Jest & Supertest for testing
+- Docker for containerization
 
 ## Prerequisites
 
 - Node.js (v18 or higher)
 - Docker and Docker Compose
 - npm or yarn
+- PostgreSQL (if running without Docker)
 
 ## Getting Started
 
@@ -41,96 +45,118 @@ A RESTful API for a Todo List application built with Node.js, Express, Prisma, a
    npm install
    ```
 
-3. Set up environment variables:
+3. Set up the database:
    ```bash
-   # In the root directory
-   cp .env.example .env
-   ```
-   Update the `.env` file with your database credentials and JWT secret.
-
-4. Start the PostgreSQL database using Docker:
-   ```bash
-   # Start the database container
+   # Start PostgreSQL container
    docker-compose up -d
+
+   # Run database setup
+   npm run db:setup
    ```
 
-5. Set up the database:
-   ```bash
-   # Generate Prisma client
-   npx prisma generate
-
-   # Run database migrations
-   npx prisma migrate dev
-   ```
-
-6. Start the development server:
+4. Start the development server:
    ```bash
    npm run dev
    ```
 
 The API will be available at http://localhost:5000
 
-## Testing
+## API Documentation
 
-Run the test suite:
+### Authentication Endpoints
+
+#### Register User
+```http
+POST /api/auth/register
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "Password123!",
+  "name": "John Doe"
+}
+```
+
+#### Login
+```http
+POST /api/auth/login
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "Password123!"
+}
+```
+
+### Todo Endpoints
+
+#### Create Todo
+```http
+POST /api/todos
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "title": "Complete project",
+  "description": "Finish the todo app",
+  "dueDate": "2024-12-31T23:59:59Z",
+  "priority": "HIGH"
+}
+```
+
+#### List Todos
+```http
+GET /api/todos?page=1&limit=10&completed=false&priority=HIGH&search=project
+Authorization: Bearer <token>
+```
+
+#### Update Todo
+```http
+PATCH /api/todos/:id
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "title": "Updated title",
+  "completed": true
+}
+```
+
+#### Delete Todo
+```http
+DELETE /api/todos/:id
+Authorization: Bearer <token>
+```
+
+## Development
+
+### Available Scripts
+
 ```bash
-# Run all tests
+# Start development server
+npm run dev
+
+# Run tests
 npm test
 
 # Run tests in watch mode
 npm run test:watch
 
-# Generate test coverage report
+# Generate test coverage
 npm run test:coverage
+
+# Database management
+npm run db:setup    # Setup database and run migrations
+npm run prisma:studio  # Open Prisma Studio
 ```
 
-## Docker Commands
-
-### Database Management
-```bash
-# Start the database
-docker-compose up -d
-
-# Stop the database
-docker-compose down
-
-# View database logs
-docker-compose logs -f postgres
-
-# Reset database (removes all data)
-docker-compose down -v
-docker-compose up -d
-```
-
-### Database Connection
-The PostgreSQL database is accessible at:
-- Host: localhost
-- Port: 5432
-- Database: todo_app
-- Username: postgres
-- Password: postgres
-
-## API Endpoints
-
-### Authentication
-- `POST /api/auth/register` - Register a new user
-- `POST /api/auth/login` - Login user
-- `GET /api/auth/me` - Get current user
-
-### Todos
-- `POST /api/todos` - Create a new todo
-- `GET /api/todos` - Get all todos (with pagination and filtering)
-- `GET /api/todos/:id` - Get a specific todo
-- `PATCH /api/todos/:id` - Update a todo
-- `DELETE /api/todos/:id` - Delete a todo
-
-## Project Structure
+### Project Structure
 
 ```
 .
 ├── src/
 │   ├── config/         # Configuration files
-│   ├── lib/           # Library files
+│   ├── lib/           # Library files (Prisma client)
 │   ├── middleware/    # Express middleware
 │   ├── repositories/  # Data access layer
 │   ├── routes/        # API routes
@@ -145,22 +171,26 @@ The PostgreSQL database is accessible at:
 │   └── todos.test.js  # Todo endpoint tests
 ├── prisma/
 │   └── schema.prisma  # Database schema
-├── .env.example       # Example environment variables
 ├── docker-compose.yml # Docker configuration
 └── package.json       # Project dependencies
 ```
 
-## Development
+## Docker Commands
 
-### Backend Development
-- Run `npm run dev` to start the development server
-- The server will automatically restart on file changes
+```bash
+# Start database
+docker-compose up -d
 
-### Database Management
-- Use Prisma Studio to manage the database:
-  ```bash
-  npx prisma studio
-  ```
+# Stop database
+docker-compose down
+
+# View logs
+docker-compose logs -f
+
+# Reset database (removes all data)
+docker-compose down -v
+docker-compose up -d
+```
 
 ## Contributing
 
