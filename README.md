@@ -1,38 +1,38 @@
-# Todo List API
+# Todo Application
 
-A RESTful API for a Todo List application built with Node.js, Express, Prisma, and PostgreSQL.
+A modern Todo List application built with NestJS, TypeScript, and Prisma. This application provides a robust API for managing todos with features like authentication, pagination, and real-time updates.
 
 ## Features
 
-- 🔐 User authentication (register, login, logout)
-- ✅ Create, read, update, and delete todos
-- 🎯 Priority levels for todos (LOW, MEDIUM, HIGH)
-- 📅 Due date support
+- 🔐 JWT Authentication
+- 📝 CRUD operations for todos
 - 📊 Pagination and filtering
-- 🛡️ Input validation with Zod
-- 🐳 Docker support for database
-- 🧪 Comprehensive test suite
-- 🔒 JWT-based authentication
-- 🎨 Clean architecture with repository pattern
+- 🔍 Search functionality
+- 📱 RESTful API
+- 📚 Swagger API documentation
+- 🧪 Unit tests
+- 🔒 Password hashing and security
+- 🎯 Role-based access control
 
 ## Tech Stack
 
-- Node.js & Express
-- Prisma ORM
-- PostgreSQL
-- Zod for validation
-- JWT for authentication
-- Jest & Supertest for testing
-- Docker for containerization
+- **Backend Framework:** NestJS
+- **Language:** TypeScript
+- **Database:** PostgreSQL
+- **ORM:** Prisma
+- **Authentication:** JWT, Passport
+- **API Documentation:** Swagger
+- **Testing:** Jest
+- **Validation:** Zod
+- **Security:** Helmet, CORS
 
 ## Prerequisites
 
-- Node.js (v18 or higher)
-- Docker and Docker Compose
+- Node.js (v14 or higher)
+- PostgreSQL
 - npm or yarn
-- PostgreSQL (if running without Docker)
 
-## Getting Started
+## Installation
 
 1. Clone the repository:
    ```bash
@@ -45,27 +45,102 @@ A RESTful API for a Todo List application built with Node.js, Express, Prisma, a
    npm install
    ```
 
-3. Set up the database:
-   ```bash
-   # Start PostgreSQL container
-   docker-compose up -d
-
-   # Run database setup
-   npm run db:setup
+3. Create a `.env` file in the root directory with the following variables:
+   ```env
+   DATABASE_URL="postgresql://username:password@localhost:5432/todo_db"
+   JWT_SECRET="your-secret-key"
+   JWT_EXPIRES_IN="1d"
+   PORT=3000
+   NODE_ENV=development
    ```
 
-4. Start the development server:
+4. Generate Prisma client:
    ```bash
-   npm run dev
+   npm run prisma:generate
    ```
 
-The API will be available at http://localhost:5000
+5. Run database migrations:
+   ```bash
+   npm run prisma:migrate
+   ```
+
+## Running the Application
+
+### Development
+```bash
+npm run start:dev
+```
+
+### Production
+```bash
+npm run build
+npm run start:prod
+```
 
 ## API Documentation
 
+Once the application is running, you can access the Swagger API documentation at:
+```
+http://localhost:3000/api
+```
+
 ### Authentication Endpoints
 
-#### Register User
+- `POST /api/auth/register` - Register a new user
+- `POST /api/auth/login` - Login user
+- `GET /api/auth/me` - Get current user profile
+- `POST /api/auth/change-password` - Change user password
+
+### Todo Endpoints
+
+- `GET /api/todos` - List all todos (with pagination)
+- `POST /api/todos` - Create a new todo
+- `GET /api/todos/:id` - Get a specific todo
+- `PATCH /api/todos/:id` - Update a todo
+- `DELETE /api/todos/:id` - Delete a todo
+- `PATCH /api/todos/:id/toggle` - Toggle todo completion status
+
+## Testing
+
+Run unit tests:
+```bash
+npm test
+```
+
+Run tests with coverage:
+```bash
+npm run test:cov
+```
+
+Run e2e tests:
+```bash
+npm run test:e2e
+```
+
+## Project Structure
+
+```
+src/
+├── auth/                 # Authentication module
+│   ├── auth.controller.ts
+│   ├── auth.service.ts
+│   ├── auth.module.ts
+│   └── guards/          # Authentication guards
+├── todo/                # Todo module
+│   ├── todo.controller.ts
+│   ├── todo.service.ts
+│   └── todo.module.ts
+├── prisma/              # Database configuration
+│   ├── prisma.service.ts
+│   └── prisma.module.ts
+├── middleware/          # Custom middleware
+├── utils/              # Utility functions
+└── main.ts            # Application entry point
+```
+
+## API Request/Response Examples
+
+### Register User
 ```http
 POST /api/auth/register
 Content-Type: application/json
@@ -77,119 +152,36 @@ Content-Type: application/json
 }
 ```
 
-#### Login
-```http
-POST /api/auth/login
-Content-Type: application/json
-
-{
-  "email": "user@example.com",
-  "password": "Password123!"
-}
-```
-
-### Todo Endpoints
-
-#### Create Todo
+### Create Todo
 ```http
 POST /api/todos
-Authorization: Bearer <token>
 Content-Type: application/json
+Authorization: Bearer <token>
 
 {
   "title": "Complete project",
-  "description": "Finish the todo app",
-  "dueDate": "2024-12-31T23:59:59Z",
-  "priority": "HIGH"
+  "description": "Finish the todo application",
+  "priority": "HIGH",
+  "dueDate": "2024-03-20T00:00:00Z"
 }
 ```
 
-#### List Todos
+### List Todos
 ```http
-GET /api/todos?page=1&limit=10&completed=false&priority=HIGH&search=project
+GET /api/todos?page=1&limit=10&completed=false
 Authorization: Bearer <token>
 ```
 
-#### Update Todo
-```http
-PATCH /api/todos/:id
-Authorization: Bearer <token>
-Content-Type: application/json
+## Error Handling
 
+The API uses standard HTTP status codes and returns error responses in the following format:
+
+```json
 {
-  "title": "Updated title",
-  "completed": true
+  "status": "error",
+  "message": "Error message",
+  "errors": [] // Optional validation errors
 }
-```
-
-#### Delete Todo
-```http
-DELETE /api/todos/:id
-Authorization: Bearer <token>
-```
-
-## Development
-
-### Available Scripts
-
-```bash
-# Start development server
-npm run dev
-
-# Run tests
-npm test
-
-# Run tests in watch mode
-npm run test:watch
-
-# Generate test coverage
-npm run test:coverage
-
-# Database management
-npm run db:setup    # Setup database and run migrations
-npm run prisma:studio  # Open Prisma Studio
-```
-
-### Project Structure
-
-```
-.
-├── src/
-│   ├── config/         # Configuration files
-│   ├── lib/           # Library files (Prisma client)
-│   ├── middleware/    # Express middleware
-│   ├── repositories/  # Data access layer
-│   ├── routes/        # API routes
-│   ├── utils/         # Utility functions
-│   ├── validations/   # Request validation schemas
-│   ├── app.js         # Express app setup
-│   └── server.js      # Server entry point
-├── tests/
-│   ├── helpers.js     # Test helper functions
-│   ├── setup.js       # Test setup
-│   ├── auth.test.js   # Authentication tests
-│   └── todos.test.js  # Todo endpoint tests
-├── prisma/
-│   └── schema.prisma  # Database schema
-├── docker-compose.yml # Docker configuration
-└── package.json       # Project dependencies
-```
-
-## Docker Commands
-
-```bash
-# Start database
-docker-compose up -d
-
-# Stop database
-docker-compose down
-
-# View logs
-docker-compose logs -f
-
-# Reset database (removes all data)
-docker-compose down -v
-docker-compose up -d
 ```
 
 ## Contributing
@@ -202,4 +194,8 @@ docker-compose up -d
 
 ## License
 
-This project is licensed under the MIT License. 
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Support
+
+For support, email <your-email> or open an issue in the repository. 
