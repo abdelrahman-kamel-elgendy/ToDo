@@ -1,14 +1,31 @@
-const request = require('supertest');
-const app = require('../src/app');
-const { createTestUser, generateToken, createTestTodo } = require('./helpers');
+import request from 'supertest';
+import { Test } from '@nestjs/testing';
+import { INestApplication } from '@nestjs/common';
+import { AppModule } from '../src/app.module';
+import { createTestUser, generateToken, createTestTodo } from './helpers';
+import { User, Todo, Priority } from '@prisma/client';
 
 describe('Todo Endpoints', () => {
-  let user;
-  let token;
+  let app: INestApplication;
+  let user: User;
+  let token: string;
+
+  beforeAll(async () => {
+    const moduleRef = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
+
+    app = moduleRef.createNestApplication();
+    await app.init();
+  });
 
   beforeEach(async () => {
     user = await createTestUser();
     token = generateToken(user);
+  });
+
+  afterAll(async () => {
+    await app.close();
   });
 
   describe('POST /api/todos', () => {
@@ -16,11 +33,11 @@ describe('Todo Endpoints', () => {
       const todoData = {
         title: 'New Todo',
         description: 'New Description',
-        priority: 'HIGH',
+        priority: Priority.HIGH,
         dueDate: new Date().toISOString(),
       };
 
-      const response = await request(app)
+      const response = await request(app.getHttpServer())
         .post('/api/todos')
         .set('Authorization', `Bearer ${token}`)
         .send(todoData);
@@ -34,7 +51,7 @@ describe('Todo Endpoints', () => {
     });
 
     it('should not create todo without authentication', async () => {
-      const response = await request(app)
+      const response = await request(app.getHttpServer())
         .post('/api/todos')
         .send({
           title: 'New Todo',
@@ -45,7 +62,7 @@ describe('Todo Endpoints', () => {
     });
 
     it('should validate required fields', async () => {
-      const response = await request(app)
+      const response = await request(app.getHttpServer())
         .post('/api/todos')
         .set('Authorization', `Bearer ${token}`)
         .send({});
@@ -63,7 +80,7 @@ describe('Todo Endpoints', () => {
     });
 
     it('should get all todos for authenticated user', async () => {
-      const response = await request(app)
+      const response = await request(app.getHttpServer())
         .get('/api/todos')
         .set('Authorization', `Bearer ${token}`);
 
@@ -73,7 +90,7 @@ describe('Todo Endpoints', () => {
     });
 
     it('should support pagination', async () => {
-      const response = await request(app)
+      const response = await request(app.getHttpServer())
         .get('/api/todos?page=1&limit=2')
         .set('Authorization', `Bearer ${token}`);
 
@@ -84,26 +101,26 @@ describe('Todo Endpoints', () => {
     });
 
     it('should filter todos by priority', async () => {
-      await createTestTodo(user.id, { priority: 'HIGH' });
+      await createTestTodo(user.id, { priority: Priority.HIGH });
 
-      const response = await request(app)
+      const response = await request(app.getHttpServer())
         .get('/api/todos?priority=HIGH')
         .set('Authorization', `Bearer ${token}`);
 
       expect(response.status).toBe(200);
-      expect(response.body.data.todos.every(todo => todo.priority === 'HIGH')).toBe(true);
+      expect(response.body.data.todos.every(todo => todo.priority === Priority.HIGH)).toBe(true);
     });
   });
 
   describe('GET /api/todos/:id', () => {
-    let todo;
+    let todo: Todo;
 
     beforeEach(async () => {
       todo = await createTestTodo(user.id);
     });
 
     it('should get a specific todo', async () => {
-      const response = await request(app)
+      const response = await request(app.getHttpServer())
         .get(`/api/todos/${todo.id}`)
         .set('Authorization', `Bearer ${token}`);
 
@@ -115,7 +132,7 @@ describe('Todo Endpoints', () => {
       const otherUser = await createTestUser({ email: 'other@example.com' });
       const otherTodo = await createTestTodo(otherUser.id);
 
-      const response = await request(app)
+      const response = await request(app.getHttpServer())
         .get(`/api/todos/${otherTodo.id}`)
         .set('Authorization', `Bearer ${token}`);
 
@@ -124,14 +141,13 @@ describe('Todo Endpoints', () => {
   });
 
   describe('PATCH /api/todos/:id', () => {
-    let todo;
+    let todo: Todo;
 
     beforeEach(async () => {
-      // Create a todo for the user
       todo = await createTestTodo(user.id, {
         title: 'Test Todo',
         description: 'Test Description',
-        priority: 'MEDIUM'
+        priority: Priority.MEDIUM
       });
     });
 
@@ -139,10 +155,10 @@ describe('Todo Endpoints', () => {
       const updateData = {
         title: 'Updated Todo',
         description: 'Updated Description',
-        priority: 'LOW',
+        priority: Priority.LOW,
       };
 
-      const response = await request(app)
+      const response = await request(app.getHttpServer())
         .patch(`/api/todos/${todo.id}`)
         .set('Authorization', `Bearer ${token}`)
         .send(updateData);
@@ -157,7 +173,7 @@ describe('Todo Endpoints', () => {
       const otherUser = await createTestUser({ email: 'other@example.com' });
       const otherTodo = await createTestTodo(otherUser.id);
 
-      const response = await request(app)
+      const response = await request(app.getHttpServer())
         .patch(`/api/todos/${otherTodo.id}`)
         .set('Authorization', `Bearer ${token}`)
         .send({ title: 'Updated Todo' });
@@ -167,21 +183,21 @@ describe('Todo Endpoints', () => {
   });
 
   describe('DELETE /api/todos/:id', () => {
-    let todo;
+    let todo: Todo;
 
     beforeEach(async () => {
       todo = await createTestTodo(user.id);
     });
 
     it('should delete a todo', async () => {
-      const response = await request(app)
+      const response = await request(app.getHttpServer())
         .delete(`/api/todos/${todo.id}`)
         .set('Authorization', `Bearer ${token}`);
 
       expect(response.status).toBe(200);
 
       // Verify todo is deleted
-      const getResponse = await request(app)
+      const getResponse = await request(app.getHttpServer())
         .get(`/api/todos/${todo.id}`)
         .set('Authorization', `Bearer ${token}`);
 
@@ -192,7 +208,7 @@ describe('Todo Endpoints', () => {
       const otherUser = await createTestUser({ email: 'other@example.com' });
       const otherTodo = await createTestTodo(otherUser.id);
 
-      const response = await request(app)
+      const response = await request(app.getHttpServer())
         .delete(`/api/todos/${otherTodo.id}`)
         .set('Authorization', `Bearer ${token}`);
 

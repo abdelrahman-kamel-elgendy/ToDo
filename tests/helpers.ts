@@ -1,10 +1,24 @@
-const jwt = require('jsonwebtoken');
-const { PrismaClient } = require('@prisma/client');
-const bcrypt = require('bcryptjs');
+import jwt from 'jsonwebtoken';
+import { PrismaClient, User, Todo, Priority } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
-const createTestUser = async (userData = {}) => {
+interface UserData {
+  email?: string;
+  password?: string;
+  name?: string;
+}
+
+interface TodoData {
+  title?: string;
+  description?: string;
+  priority?: Priority;
+  dueDate?: Date;
+  completed?: boolean;
+}
+
+export const createTestUser = async (userData: UserData = {}): Promise<User> => {
   const defaultUser = {
     email: 'test@example.com',
     password: 'Password123!',
@@ -22,7 +36,7 @@ const createTestUser = async (userData = {}) => {
   });
 };
 
-const generateToken = (user) => {
+export const generateToken = (user: User): string => {
   return jwt.sign(
     { id: user.id },
     process.env.JWT_SECRET || 'your-secret-key',
@@ -30,11 +44,11 @@ const generateToken = (user) => {
   );
 };
 
-const createTestTodo = async (userId, todoData = {}) => {
+export const createTestTodo = async (userId: string, todoData: TodoData = {}): Promise<Todo> => {
   const defaultTodo = {
     title: 'Test Todo',
     description: 'Test Description',
-    priority: 'MEDIUM',
+    priority: Priority.MEDIUM,
     dueDate: new Date(),
     completed: false
   };
@@ -46,10 +60,4 @@ const createTestTodo = async (userId, todoData = {}) => {
       userId
     }
   });
-};
-
-module.exports = {
-  createTestUser,
-  generateToken,
-  createTestTodo
 }; 

@@ -1,8 +1,26 @@
-const request = require('supertest');
-const app = require('../src/app');
-const { createTestUser, generateToken } = require('./helpers');
+import request from 'supertest';
+import { Test } from '@nestjs/testing';
+import { INestApplication } from '@nestjs/common';
+import { AppModule } from '../src/app.module';
+import { createTestUser, generateToken } from './helpers';
+import { User } from '@prisma/client';
 
 describe('Authentication Endpoints', () => {
+  let app: INestApplication;
+
+  beforeAll(async () => {
+    const moduleRef = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
+
+    app = moduleRef.createNestApplication();
+    await app.init();
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+
   describe('POST /api/auth/register', () => {
     it('should register a new user', async () => {
       const userData = {
@@ -11,7 +29,7 @@ describe('Authentication Endpoints', () => {
         name: 'New User',
       };
 
-      const response = await request(app)
+      const response = await request(app.getHttpServer())
         .post('/api/auth/register')
         .send(userData);
 
@@ -26,7 +44,7 @@ describe('Authentication Endpoints', () => {
     it('should not register a user with existing email', async () => {
       const user = await createTestUser();
 
-      const response = await request(app)
+      const response = await request(app.getHttpServer())
         .post('/api/auth/register')
         .send({
           email: user.email,
@@ -39,7 +57,7 @@ describe('Authentication Endpoints', () => {
     });
 
     it('should validate password requirements', async () => {
-      const response = await request(app)
+      const response = await request(app.getHttpServer())
         .post('/api/auth/register')
         .send({
           email: 'test@example.com',
@@ -56,7 +74,7 @@ describe('Authentication Endpoints', () => {
     it('should login with valid credentials', async () => {
       const user = await createTestUser();
 
-      const response = await request(app)
+      const response = await request(app.getHttpServer())
         .post('/api/auth/login')
         .send({
           email: user.email,
@@ -72,7 +90,7 @@ describe('Authentication Endpoints', () => {
     it('should not login with invalid password', async () => {
       const user = await createTestUser();
 
-      const response = await request(app)
+      const response = await request(app.getHttpServer())
         .post('/api/auth/login')
         .send({
           email: user.email,
@@ -84,7 +102,7 @@ describe('Authentication Endpoints', () => {
     });
 
     it('should not login with non-existent email', async () => {
-      const response = await request(app)
+      const response = await request(app.getHttpServer())
         .post('/api/auth/login')
         .send({
           email: 'nonexistent@example.com',
@@ -101,7 +119,7 @@ describe('Authentication Endpoints', () => {
       const user = await createTestUser();
       const token = generateToken(user);
 
-      const response = await request(app)
+      const response = await request(app.getHttpServer())
         .get('/api/auth/me')
         .set('Authorization', `Bearer ${token}`);
 
@@ -112,7 +130,7 @@ describe('Authentication Endpoints', () => {
     });
 
     it('should not get current user without token', async () => {
-      const response = await request(app)
+      const response = await request(app.getHttpServer())
         .get('/api/auth/me');
 
       expect(response.status).toBe(401);
@@ -120,7 +138,7 @@ describe('Authentication Endpoints', () => {
     });
 
     it('should not get current user with invalid token', async () => {
-      const response = await request(app)
+      const response = await request(app.getHttpServer())
         .get('/api/auth/me')
         .set('Authorization', 'Bearer invalid-token');
 

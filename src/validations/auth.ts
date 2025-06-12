@@ -1,6 +1,6 @@
-const { z } = require('zod');
+import { z } from 'zod';
 
-const registerSchema = z.object({
+export const registerSchema = z.object({
   body: z.object({
     email: z.string().email('Invalid email address'),
     password: z.string()
@@ -13,14 +13,14 @@ const registerSchema = z.object({
   }),
 });
 
-const loginSchema = z.object({
+export const loginSchema = z.object({
   body: z.object({
     email: z.string().email('Invalid email address'),
     password: z.string().min(1, 'Password is required'),
   }),
 });
 
-const changePasswordSchema = z.object({
+export const changePasswordSchema = z.object({
   body: z.object({
     currentPassword: z.string().min(1, 'Current password is required'),
     newPassword: z.string()
@@ -32,8 +32,7 @@ const changePasswordSchema = z.object({
   }),
 });
 
-module.exports = {
-  registerSchema,
-  loginSchema,
-  changePasswordSchema,
-}; 
+// Type inference for request bodies
+export type RegisterBody = z.infer<typeof registerSchema>['body'];
+export type LoginBody = z.infer<typeof loginSchema>['body'];
+export type ChangePasswordBody = z.infer<typeof changePasswordSchema>['body']; 
